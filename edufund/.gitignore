@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+.npm
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Environment variables (if you add a backend later)
+.env
+.env.local
+.env.production

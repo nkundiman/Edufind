@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduFund – Student Project Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #131929;
+    --surface2: #1a2236;
+    --border: #243050;
+    --accent: #4f8ef7;
+    --accent2: #22d3a5;
+    --warn: #f7a84f;
+    --danger: #f75f5f;
+    --text: #e8edf8;
+    --muted: #7a8ba8;
+    --card: #16203a;
+    --radius: 12px;
+    --transition: 0.22s cubic-bezier(.4,0,.2,1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+  /* ---- SCREENS ---- */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ---- LANDING / LOGIN ---- */
+  #screen-landing {
+    background: radial-gradient(ellipse at 60% 0%, #1a2a5e 0%, #0b0f1a 65%);
+    align-items: center; justify-content: center; flex-direction: column; gap: 0;
+  }
+  .landing-hero { text-align: center; padding: 48px 24px 0; max-width: 580px; }
+  .landing-badge { display: inline-block; background: rgba(79,142,247,.15); border: 1px solid rgba(79,142,247,.35); color: var(--accent); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 24px; }
+  .landing-hero h1 { font-size: clamp(2.2rem,5vw,3.2rem); font-weight: 800; line-height: 1.1; margin-bottom: 16px; background: linear-gradient(135deg, #fff 40%, #4f8ef7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .landing-hero p { color: var(--muted); font-size: 1.05rem; line-height: 1.7; margin-bottom: 40px; }
+  .auth-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 0 24px 64px; }
+  .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 36px 32px; width: 280px; text-align: center; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
+  .auth-card::before { content:''; position:absolute; inset:0; background: linear-gradient(135deg, rgba(79,142,247,.07), transparent); opacity:0; transition: var(--transition); }
+  .auth-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(79,142,247,.15); }
+  .auth-card:hover::before { opacity:1; }
+  .auth-card .icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 1.6rem; }
+  .auth-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
+  .auth-card p { font-size: .85rem; color: var(--muted); line-height: 1.5; }
+
+  /* ---- AUTH FORM ---- */
+  #screen-auth { background: radial-gradient(ellipse at 40% 20%, #0e1d42 0%, #0b0f1a 70%); justify-content: center; align-items: center; }
+  .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 48px 40px; width: 420px; max-width: 95vw; }
+  .auth-box h2 { font-size: 1.6rem; margin-bottom: 6px; }
+  .auth-box .sub { color: var(--muted); font-size: .9rem; margin-bottom: 32px; }
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: 7px; letter-spacing: .04em; text-transform: uppercase; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 14px; color: var(--text); font-family: inherit; font-size: .95rem;
+    transition: var(--transition); outline: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,.1); }
+  .form-group textarea { resize: vertical; min-height: 90px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 10px; border: none; font-family: 'Syne', sans-serif; font-weight: 600; font-size: .95rem; cursor: pointer; transition: var(--transition); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #3a7ae8; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(79,142,247,.3); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-success { background: var(--accent2); color: #0b1a13; }
+  .btn-success:hover { filter: brightness(1.1); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-sm { padding: 7px 14px; font-size: .82rem; border-radius: 8px; }
+  .btn-full { width: 100%; justify-content: center; }
+  .back-link { color: var(--muted); font-size: .85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 24px; transition: color var(--transition); }
+  .back-link:hover { color: var(--accent); }
+
+  /* ---- MAIN LAYOUT ---- */
+  .app-layout { display: flex; min-height: 100vh; flex: 1; }
+  .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo span { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem; color: var(--accent); }
+  .sidebar-logo small { display: block; font-size: .72rem; color: var(--muted); margin-top: 2px; }
+  .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: .9rem; color: var(--muted); transition: var(--transition); }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(79,142,247,.15); color: var(--accent); }
+  .nav-item .ni { font-size: 1.1rem; }
+  .sidebar-user { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; color: #fff; flex-shrink: 0; }
+  .user-info { flex:1; min-width:0; }
+  .user-info strong { font-size: .85rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-info small { color: var(--muted); font-size: .75rem; }
+  .logout-btn { color: var(--muted); cursor: pointer; font-size: 1rem; transition: color var(--transition); }
+  .logout-btn:hover { color: var(--danger); }
+
+  .main-content { flex: 1; overflow-y: auto; background: var(--bg); }
+  .page-header { padding: 32px 32px 0; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .page-header h2 { font-size: 1.7rem; }
+  .page-header p { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+  .content-body { padding: 24px 32px 48px; }
+
+  /* ---- PAGES ---- */
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 20px; }
+  .stat-card .label { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 10px; }
+  .stat-card .value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 700; }
+  .stat-card .change { font-size: .78rem; margin-top: 6px; color: var(--accent2); }
+
+  /* TABLE */
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .table-toolbar { padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .search-input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-family: inherit; font-size: .88rem; outline: none; width: 220px; transition: var(--transition); }
+  .search-input:focus { border-color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 13px 16px; text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface); }
+  td { padding: 14px 16px; font-size: .88rem; border-bottom: 1px solid rgba(36,48,80,.5); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(79,142,247,.04); }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 100px; font-size: .75rem; font-weight: 500; }
+  .badge-pending { background: rgba(247,168,79,.15); color: var(--warn); }
+  .badge-approved { background: rgba(34,211,165,.15); color: var(--accent2); }
+  .badge-rejected { background: rgba(247,95,95,.15); color: var(--danger); }
+  .badge-review { background: rgba(79,142,247,.15); color: var(--accent); }
+
+  /* CHATBOT */
+  .chat-container { max-width: 720px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; height: 520px; }
+  .chat-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+  .bot-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+  .chat-header-info strong { font-size: .95rem; }
+  .chat-header-info small { color: var(--accent2); font-size: .78rem; }
+  .online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); margin-right: 4px; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .msg { max-width: 82%; display: flex; flex-direction: column; gap: 4px; }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.bot { align-self: flex-start; align-items: flex-start; }
+  .msg-bubble { padding: 11px 16px; border-radius: 16px; font-size: .9rem; line-height: 1.55; }
+  .msg.user .msg-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.bot .msg-bubble { background: var(--surface2); color: var(--text); border-bottom-left-radius: 4px; }
+  .msg-time { font-size: .72rem; color: var(--muted); }
+  .typing-bubble { display: flex; gap: 5px; padding: 14px 18px; background: var(--surface2); border-radius: 16px; border-bottom-left-radius: 4px; align-items: center; }
+  .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: typingBounce 1.2s infinite ease-in-out; }
+  .typing-dot:nth-child(2) { animation-delay: .2s; }
+  .typing-dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .chat-input-row { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+  .chat-input { flex:1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 11px 16px; color: var(--text); font-family: inherit; font-size: .9rem; outline: none; transition: var(--transition); }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-send { background: var(--accent); border: none; border-radius: 10px; padding: 11px 18px; color: #fff; cursor: pointer; font-size: 1rem; transition: var(--transition); }
+  .chat-send:hover { background: #3a7ae8; }
+
+  /* AMOUNT MANAGEMENT */
+  .amount-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .amount-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+  .amount-card h4 { font-size: .95rem; margin-bottom: 18px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; font-size: .78rem; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset:0; background: rgba(0,0,0,.65); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 540px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-size: 1.3rem; margin-bottom: 6px; }
+  .modal .sub { color: var(--muted); font-size: .85rem; margin-bottom: 28px; }
+  .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
+
+  /* NOTIFICATIONS */
+  .toast { position: fixed; bottom: 28px; right: 28px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 20px; font-size: .88rem; z-index: 200; transform: translateY(20px); opacity: 0; transition: all .3s; pointer-events:none; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--accent2); }
+  .toast.error { border-color: var(--danger); }
+
+  /* STEP FORM */
+  .step-indicator { display: flex; gap: 8px; margin-bottom: 32px; }
+  .step { flex:1; height: 4px; border-radius: 4px; background: var(--border); transition: background .3s; }
+  .step.done { background: var(--accent2); }
+  .step.active { background: var(--accent); }
+
+  /* RESPONSIVE */
+  @media(max-width:768px) {
+    .sidebar { width: 60px; }
+    .sidebar-logo span, .sidebar-logo small, .nav-item span, .user-info { display: none; }
+    .content-body { padding: 16px; }
+    .amount-grid { grid-template-columns: 1fr; }
+    .page-header { padding: 20px 16px 0; }
+  }
+  select option { background: var(--surface); }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .pill { padding: 5px 14px; border-radius: 100px; font-size: .8rem; background: rgba(79,142,247,.12); color: var(--accent); border: 1px solid rgba(79,142,247,.25); cursor: pointer; transition: var(--transition); }
+  .pill:hover { background: rgba(79,142,247,.25); }
+</style>
+</head>
+<body>
+
+<!-- ============ SCREEN: LANDING ============ -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-hero">
+    <div class="landing-badge">🎓 EduFund Project Portal</div>
+    <h1>Fund Your Innovation. Shape the Future.</h1>
+    <p>A complete platform for students to submit projects, track funding requests, and for administrators to manage applications end-to-end.</p>
+  </div>
+  <div class="auth-cards">
+    <div class="auth-card" onclick="showAuth('student')">
+      <div class="icon" style="background:rgba(79,142,247,.15)">🎒</div>
+      <h3>Student Portal</h3>
+      <p>Submit your project, track application status and funding requests.</p>
+    </div>
+    <div class="auth-card" onclick="showAuth('admin')">
+      <div class="icon" style="background:rgba(34,211,165,.15)">🛡️</div>
+      <h3>Admin Dashboard</h3>
+      <p>Review applications, manage funding, download reports and more.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: AUTH ============ -->
+<div id="screen-auth" class="screen">
+  <div class="auth-box">
+    <span class="back-link" onclick="showScreen('screen-landing')">← Back</span>
+    <h2 id="auth-title">Student Login</h2>
+    <p class="sub" id="auth-sub">Access your project portal</p>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="auth-email" placeholder="you@university.edu" value="student@edufund.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="auth-password" placeholder="••••••••" value="password">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In →</button>
+    <p style="text-align:center;margin-top:16px;font-size:.82rem;color:var(--muted)">
+      New student? <span style="color:var(--accent);cursor:pointer" onclick="showRegister()">Create account</span>
+    </p>
+  </div>
+</div>
+
+<!-- ============ SCREEN: REGISTER ============ -->
+<div id="screen-register" class="screen">
+  <div style="display:flex;justify-content:center;align-items:center;min-height:100vh;padding:24px;">
+  <div class="auth-box" style="width:500px">
+    <span class="back-link" onclick="showScreen('screen-auth')">← Back to Login</span>
+    <h2>Create Student Account</h2>
+    <p class="sub">Join EduFund and submit your project</p>
+    <div class="step-indicator" id="reg-steps">
+      <div class="step active" id="rs1"></div><div class="step" id="rs2"></div><div class="step" id="rs3"></div>
+    </div>
+    <div id="reg-step1">
+      <div class="form-group"><label>Full Name</label><input id="r-name" placeholder="Jane Doe"></div>
+      <div class="form-group"><label>University / Institution</label><input id="r-uni" placeholder="University of Technology"></div>
+      <div class="form-group"><label>Student ID</label><input id="r-sid" placeholder="STU-2024-001"></div>
+      <button class="btn btn-primary btn-full" onclick="regNext(2)">Continue →</button>
+    </div>
+    <div id="reg-step2" style="display:none">
+      <div class="form-group"><label>Email</label><input id="r-email" placeholder="you@university.edu"></div>
+      <div class="form-group"><label>Department / Faculty</label>
+        <select id="r-dept"><option>Select department</option><option>Engineering</option><option>Science</option><option>Business</option><option>Arts & Humanities</option><option>Medicine</option><option>Law</option></select>
+      </div>
+      <div class="form-group"><label>Academic Year</label>
+        <select id="r-year"><option>Select year</option><option>Year 1</option><option>Year 2</option><option>Year 3</option><option>Year 4</option><option>Postgraduate</option></select>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="regNext(3)">Continue →</button>
+    </div>
+    <div id="reg-step3" style="display:none">
+      <div class="form-group"><label>Password</label><input type="password" id="r-pass" placeholder="••••••••"></div>
+      <div class="form-group"><label>Confirm Password</label><input type="password" id="r-pass2" placeholder="••••••••"></div>
+      <button class="btn btn-success btn-full" onclick="doRegister()">🎉 Create Account</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: STUDENT APP ============ -->
+<div id="screen-student" class="screen">
+  <div class="app-layout">
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <span>EduFund</span>
+        <small>Student Portal</small>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" onclick="studentTab('dashboard',this)"><span class="ni">📊</span><span>Dashboard</span></div>
+        <div class="nav-item" onclick="studentTab('apply',this)"><span class="ni">✏️</span><span>New Application</span></div>
+        <div class="nav-item" onclick="studentTab('myapps',this)"><span class="ni">📁</span><span>My Applications</span></div>
+        <div class="nav-item" onclick="studentTab('funding',this)"><span class="ni">💰</span><span>Funding</span></div>
+        <div class="nav-item" onclick="studentTab('chat',this)"><span class="ni">💬</span><span>AI Assistant</span></div>
+      </nav>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="s-avatar">JS</div>
+        <div class="user-info"><strong id="s-uname">Jane Student</strong><small>Student</small></div>
+        <span class="logout-btn" onclick="doLogout()" title="Logout">⏏</span>
+      </div>
+    </div>
+    <div class="main-content">
+      <!-- STUDENT DASHBOARD -->
+      <div class="tab-page active" id="s-tab-dashboard">
+        <div class="page-header"><div><h2>My Dashboard</h2><p>Overview of your project applications and funding status.</p></div></div>
+        <div class="content-body">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="label">Applications</div><div class="value" id="s-stat-total">3</div><div class="change">↑ 1 this month</div></div>
+            <div class="stat-card"><div class="label">Approved</div><div class="value" style="color:var(--accent2)" id="s-stat-approved">1</div><div class="change">Latest: TechSeed AI</div></div>
+            <div class="stat-card"><div class="label">Pending Review</div><div class="value" style="color:var(--warn)" id="s-stat-pending">1</div><div class="change">Awaiting admin review</div></div>
+            <div class="stat-card"><div class="label">Total Requested</div><div class="value" style="color:var(--accent)" id="s-stat-amount">$8,500</div><div class="change">Across all projects</div></div>
+          </div>
+          <h3 style="margin-bottom:16px;font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Recent Applications</h3>
+          <div class="table-wrap">
+            <table><thead><tr><th>Project</th><th>Category</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody id="s-recent-apps"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW APPLICATION -->
+      <div class="tab-page" id="s-tab-apply">
+        <div class="page-header"><div><h2>Submit New Application</h2><p>Fill in the details of your project to apply for funding.</p></div></div>
+        <div class="content-body">
+          <div class="auth-box" style="width:100%;max-width:640px;margin:0">
+            <div class="form-group"><label>Project Title</label><input id="app-title" placeholder="e.g., Solar-Powered Water Purifier"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div class="form-group"><label>Category</label>
+                <select id="app-cat"><option>Technology</option><option>Environment</option><option>Health</option><option>Education</option><option>Social Impact</option><option>Arts</option></select>
+              </div>
+              <div class="form-group"><label>Funding Requested ($)</label><input id="app-amount" type="number" placeholder="5000" min="100"></div>
+            </div>
+            <div class="form-group"><label>Project Description</label><textarea id="app-desc" placeholder="Describe your project, its goals and expected impact..."></textarea></div>
+            <div class="form-group"><label>Timeline</label>
+              <select id="app-timeline"><option>3 months</option><option>6 months</option><option>12 months</option><option>18 months</option><option>24 months</option></select>
+            </div>
+            <div class="form-group"><label>Team Members (comma separated)</label><input id="app-team" placeholder="Jane Doe, John Smith"></div>
+            <div class="form-group"><label>Expected Outcomes</label><textarea id="app-outcomes" placeholder="What will you deliver at the end of this project?"></textarea></div>
+            <button class="btn btn-primary" onclick="submitApplication()">Submit Application →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY APPLICATIONS -->
+      <div class="tab-page" id="s-tab-myapps">
+        <div class="page-header"><div><h2>My Applications</h2><p>Track the status of all your submitted projects.</p></div></div>
+        <div class="content-body">
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <input class="search-input" placeholder="🔍 Search applications..." oninput="filterStudentApps(this.value)">
+            </div>
+            <table><thead><tr><th>Project</th><th>Category</th><th>Amount</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
+            <tbody id="s-apps-table"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- FUNDING -->
+      <div class="tab-page" id="s-tab-funding">
+        <div class="page-header"><div><h2>Funding Overview</h2><p>Track your requested and approved funding amounts.</p></div></div>
+        <div class="content-body">
+          <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="stat-card"><div class="label">Total Requested</div><div class="value" id="sf-req">$0</div></div>
+            <div class="stat-card"><div class="label">Total Approved</div><div class="value" style="color:var(--accent2)" id="sf-app">$0</div></div>
+            <div class="stat-card"><div class="label">Pending Decision</div><div class="value" style="color:var(--warn)" id="sf-pend">$0</div></div>
+          </div>
+          <div class="table-wrap" style="margin-top:0">
+            <table><thead><tr><th>Project</th><th>Requested</th><th>Status</th><th>Notes</th></tr></thead>
+            <tbody id="sf-table"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STUDENT CHATBOT -->
+      <div class="tab-page" id="s-tab-chat">
+        <div class="page-header"><div><h2>AI Assistant</h2><p>Get help with your application, funding questions, or project advice.</p></div></div>
+        <div class="content-body">
+          <div class="chat-container">
+            <div class="chat-header">
+              <div class="bot-avatar">🤖</div>
+              <div class="chat-header-info">
+                <strong>EduFund Assistant</strong>
+                <div><span class="online-dot"></span><small>Online & ready to help</small></div>
+              </div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+              <div class="msg bot"><div class="msg-bubble">👋 Hi there! I'm EduFund's AI assistant. I can help you with:<br><br>• How to submit an application<br>• Understanding funding categories<br>• Checking application status<br>• Project advice & tips<br><br>What would you like to know?</div><div class="msg-time">Just now</div></div>
+            </div>
+            <div class="pill-row" style="padding:0 20px 12px">
+              <div class="pill" onclick="quickChat('How do I apply for funding?')">How to apply?</div>
+              <div class="pill" onclick="quickChat('What is the maximum funding amount?')">Max funding?</div>
+              <div class="pill" onclick="quickChat('How long does review take?')">Review time?</div>
+            </div>
+            <div class="chat-input-row">
+              <input class="chat-input" id="chat-input" placeholder="Ask anything about EduFund..." onkeydown="if(event.key==='Enter')sendChat()">
+              <button class="chat-send" onclick="sendChat()">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN: ADMIN ============ -->
+<div id="screen-admin" class="screen">
+  <div class="app-layout">
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <span>EduFund</span>
+        <small>Admin Console</small>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" onclick="adminTab('dashboard',this)"><span class="ni">📊</span><span>Dashboard</span></div>
+        <div class="nav-item" onclick="adminTab('applications',this)"><span class="ni">📋</span><span>Applications</span></div>
+        <div class="nav-item" onclick="adminTab('amounts',this)"><span class="ni">💰</span><span>Amounts</span></div>
+        <div class="nav-item" onclick="adminTab('exports',this)"><span class="ni">📥</span><span>Export CSV</span></div>
+        <div class="nav-item" onclick="adminTab('chat',this)"><span class="ni">💬</span><span>AI Assistant</span></div>
+      </nav>
+      <div class="sidebar-user">
+        <div class="user-avatar" style="background:linear-gradient(135deg,#22d3a5,#4f8ef7)">AD</div>
+        <div class="user-info"><strong>Admin User</strong><small>Administrator</small></div>
+        <span class="logout-btn" onclick="doLogout()" title="Logout">⏏</span>
+      </div>
+    </div>
+    <div class="main-content">
+
+      <!-- ADMIN DASHBOARD -->
+      <div class="tab-page active" id="a-tab-dashboard">
+        <div class="page-header"><div><h2>Admin Dashboard</h2><p>Real-time overview of all student applications and funding.</p></div></div>
+        <div class="content-body">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="label">Total Applications</div><div class="value" id="a-stat-total">0</div></div>
+            <div class="stat-card"><div class="label">Pending Review</div><div class="value" style="color:var(--warn)" id="a-stat-pending">0</div></div>
+            <div class="stat-card"><div class="label">Approved</div><div class="value" style="color:var(--accent2)" id="a-stat-approved">0</div></div>
+            <div class="stat-card"><div class="label">Total Funding Requested</div><div class="value" style="color:var(--accent)" id="a-stat-amount">$0</div></div>
+            <div class="stat-card"><div class="label">Approved Funding</div><div class="value" style="color:var(--accent2)" id="a-stat-approved-amt">$0</div></div>
+            <div class="stat-card"><div class="label">Total Students</div><div class="value" id="a-stat-students">0</div></div>
+          </div>
+          <h3 style="margin:0 0 16px;font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Latest Applications</h3>
+          <div class="table-wrap">
+            <table><thead><tr><th>Student</th><th>Project</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="a-recent-apps"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALL APPLICATIONS -->
+      <div class="tab-page" id="a-tab-applications">
+        <div class="page-header">
+          <div><h2>All Applications</h2><p>Review and manage every submitted project application.</p></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <select id="a-filter-status" class="search-input" style="width:150px" onchange="renderAdminTable()">
+              <option value="">All Statuses</option><option value="pending">Pending</option><option value="review">In Review</option><option value="approved">Approved</option><option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div class="content-body">
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <input class="search-input" id="a-search" placeholder="🔍 Search by student or project..." oninput="renderAdminTable()">
+            </div>
+            <table><thead><tr><th>Student</th><th>Project</th><th>Category</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="a-apps-table"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AMOUNTS MANAGEMENT -->
+      <div class="tab-page" id="a-tab-amounts">
+        <div class="page-header"><div><h2>Amount Management</h2><p>Review and adjust funding amounts for each application.</p></div></div>
+        <div class="content-body">
+          <div class="amount-grid">
+            <div class="amount-card">
+              <h4>Funding Summary</h4>
+              <div class="stats-grid" style="grid-template-columns:1fr 1fr">
+                <div class="stat-card"><div class="label">Requested</div><div class="value" id="am-req" style="font-size:1.4rem">$0</div></div>
+                <div class="stat-card"><div class="label">Approved</div><div class="value" style="color:var(--accent2);font-size:1.4rem" id="am-app">$0</div></div>
+              </div>
+              <div class="stat-card" style="margin-top:16px"><div class="label">Avg. Requested per Application</div><div class="value" style="font-size:1.3rem" id="am-avg">$0</div></div>
+            </div>
+            <div class="amount-card">
+              <h4>Adjust Approved Amount</h4>
+              <div class="form-group"><label>Select Application</label>
+                <select id="am-select" onchange="loadAmountApp()"><option value="">-- Select --</option></select>
+              </div>
+              <div class="form-group"><label>Requested Amount</label><input id="am-req-disp" disabled style="opacity:.6"></div>
+              <div class="form-group"><label>Approved Amount ($)</label><input id="am-approve-input" type="number" placeholder="Enter approved amount"></div>
+              <div class="form-group"><label>Note for Student</label><input id="am-note" placeholder="Optional note..."></div>
+              <button class="btn btn-success" onclick="saveAmount()">💾 Save Amount</button>
+            </div>
+          </div>
+          <div class="table-wrap" style="margin-top:20px">
+            <table><thead><tr><th>Student</th><th>Project</th><th>Requested</th><th>Approved</th><th>Status</th><th>Note</th></tr></thead>
+            <tbody id="am-table"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPORT CSV -->
+      <div class="tab-page" id="a-tab-exports">
+        <div class="page-header"><div><h2>Export Data</h2><p>Download applicant data as CSV for reporting and analysis.</p></div></div>
+        <div class="content-body">
+          <div class="amount-grid">
+            <div class="amount-card">
+              <h4>Export Options</h4>
+              <div class="form-group" style="margin-bottom:16px"><label>Filter by Status</label>
+                <select id="exp-status"><option value="all">All Applications</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+              </div>
+              <div class="form-group"><label>Date Range</label>
+                <select id="exp-range"><option value="all">All Time</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>
+              </div>
+              <button class="btn btn-success" style="margin-top:8px" onclick="exportCSV()">⬇ Download CSV</button>
+            </div>
+            <div class="amount-card">
+              <h4>Export Preview</h4>
+              <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px">The CSV will include the following columns:</p>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:.83rem;color:var(--muted)">
+                <span>✓ Student Name &nbsp;&nbsp; ✓ Student ID</span>
+                <span>✓ University &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✓ Department</span>
+                <span>✓ Project Title &nbsp;&nbsp;&nbsp;&nbsp; ✓ Category</span>
+                <span>✓ Amount Requested ✓ Amount Approved</span>
+                <span>✓ Status &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✓ Submission Date</span>
+                <span>✓ Team Members &nbsp;&nbsp;&nbsp; ✓ Admin Notes</span>
+              </div>
+              <div style="margin-top:16px;padding:10px 14px;background:var(--bg);border-radius:8px;font-size:.8rem;color:var(--muted)" id="exp-preview-count">
+                Ready to export <strong id="ep-count">0</strong> applications.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN CHAT -->
+      <div class="tab-page" id="a-tab-chat">
+        <div class="page-header"><div><h2>AI Assistant</h2><p>AI-powered support for managing the portal.</p></div></div>
+        <div class="content-body">
+          <div class="chat-container">
+            <div class="chat-header">
+              <div class="bot-avatar">🤖</div>
+              <div class="chat-header-info">
+                <strong>EduFund Admin Bot</strong>
+                <div><span class="online-dot"></span><small>Admin mode active</small></div>
+              </div>
+            </div>
+            <div class="chat-messages" id="admin-chat-messages">
+              <div class="msg bot"><div class="msg-bubble">👋 Hello Admin! I can help you with:<br><br>• Application statistics<br>• Funding summaries<br>• Exporting data<br>• Review guidelines<br><br>How can I assist you today?</div><div class="msg-time">Just now</div></div>
+            </div>
+            <div class="pill-row" style="padding:0 20px 12px">
+              <div class="pill" onclick="quickAdminChat('How many pending applications are there?')">Pending count</div>
+              <div class="pill" onclick="quickAdminChat('What is the total funding requested?')">Total funding</div>
+              <div class="pill" onclick="quickAdminChat('How do I export the applicant list?')">Export help</div>
+            </div>
+            <div class="chat-input-row">
+              <input class="chat-input" id="admin-chat-input" placeholder="Ask about applications, funding, or reports..." onkeydown="if(event.key==='Enter')sendAdminChat()">
+              <button class="chat-send" onclick="sendAdminChat()">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Application Detail -->
+<div class="modal-overlay" id="modal-app">
+  <div class="modal">
+    <h3 id="modal-proj-title">Project Details</h3>
+    <p class="sub" id="modal-proj-sub">Submitted by —</p>
+    <div id="modal-content"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ STATE ============
+let currentRole = null;
+let currentUser = null;
+
+const students = [
+  { id: 'STU-001', name: 'Alice Nkurunziza', email: 'alice@uni.rw', uni: 'Univ. of Rwanda', dept: 'Engineering', year: 'Year 3' },
+  { id: 'STU-002', name: 'Bob Kamanzi', email: 'bob@uni.rw', uni: 'INES-Ruhengeri', dept: 'Technology', year: 'Year 2' },
+  { id: 'STU-003', name: 'Clara Uwase', email: 'clara@kist.ac.rw', uni: 'KIST', dept: 'Science', year: 'Year 4' },
+];
+
+let applications = [
+  { id:'APP-001', studentId:'STU-001', studentName:'Alice Nkurunziza', uni:'Univ. of Rwanda', project:'TechSeed AI Platform', category:'Technology', amount:5000, approvedAmt:4500, status:'approved', date:'2026-02-10', desc:'An AI-powered platform to connect startups with seed investors in East Africa.', team:'Alice Nkurunziza, David Mugabo', outcomes:'MVP launch, 50 beta users', timeline:'6 months', note:'Excellent proposal. Reduced by 10% due to budget.' },
+  { id:'APP-002', studentId:'STU-001', studentName:'Alice Nkurunziza', uni:'Univ. of Rwanda', project:'AgroSmart Monitor', category:'Environment', amount:2500, approvedAmt:0, status:'pending', date:'2026-03-01', desc:'IoT sensors for smart irrigation in smallholder farms.', team:'Alice Nkurunziza', outcomes:'3 pilot farms equipped', timeline:'3 months', note:'' },
+  { id:'APP-003', studentId:'STU-002', studentName:'Bob Kamanzi', uni:'INES-Ruhengeri', project:'MediLink App', category:'Health', amount:3200, approvedAmt:0, status:'review', date:'2026-03-05', desc:'Telemedicine app connecting rural patients with doctors.', team:'Bob Kamanzi, Eve Kamasa', outcomes:'500 registered users, 3 partnered clinics', timeline:'12 months', note:'' },
+  { id:'APP-004', studentId:'STU-003', studentName:'Clara Uwase', uni:'KIST', project:'EduKids VR', category:'Education', amount:7000, approvedAmt:0, status:'rejected', date:'2026-01-20', desc:'VR learning experiences for primary school children.', team:'Clara Uwase, Frank Muneza', outcomes:'10 VR classrooms deployed', timeline:'18 months', note:'Scope too large for current cycle. Resubmit with reduced scope.' },
+  { id:'APP-005', studentId:'STU-002', studentName:'Bob Kamanzi', uni:'INES-Ruhengeri', project:'CleanWater Bot', category:'Environment', amount:4100, approvedAmt:0, status:'pending', date:'2026-03-18', desc:'Low-cost water purification robot for rural communities.', team:'Bob Kamanzi', outcomes:'5 communities served', timeline:'6 months', note:'' },
+];
+
+// ============ NAVIGATION ============
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showAuth(role) {
+  currentRole = role;
+  document.getElementById('auth-title').textContent = role === 'admin' ? 'Admin Login' : 'Student Login';
+  document.getElementById('auth-sub').textContent = role === 'admin' ? 'Access the admin console' : 'Access your project portal';
+  document.getElementById('auth-email').value = role === 'admin' ? 'admin@edufund.com' : 'student@edufund.com';
+  showScreen('screen-auth');
+}
+function showRegister() { showScreen('screen-register'); }
+
+function doLogin() {
+  const email = document.getElementById('auth-email').value;
+  const pass = document.getElementById('auth-password').value;
+  if (!email || !pass) { showToast('Please fill in all fields', 'error'); return; }
+  if (currentRole === 'admin') {
+    currentUser = { name: 'Admin User', role: 'admin' };
+    showScreen('screen-admin');
+    renderAdminDashboard();
+    updateExportCount();
+    renderAmountsTable();
+    populateAmountSelect();
+    showToast('Welcome back, Admin!', 'success');
+  } else {
+    currentUser = students[0];
+    document.getElementById('s-uname').textContent = currentUser.name;
+    document.getElementById('s-avatar').textContent = currentUser.name.split(' ').map(n=>n[0]).join('');
+    showScreen('screen-student');
+    renderStudentDashboard();
+    showToast('Welcome back, ' + currentUser.name.split(' ')[0] + '!', 'success');
+  }
+}
+
+function doLogout() { showScreen('screen-landing'); showToast('Logged out successfully'); }
+
+let regStep = 1;
+function regNext(step) {
+  document.getElementById('reg-step' + regStep).style.display = 'none';
+  regStep = step;
+  document.getElementById('reg-step' + regStep).style.display = '';
+  for (let i=1;i<=3;i++) {
+    const el = document.getElementById('rs'+i);
+    el.className = 'step' + (i < regStep ? ' done' : i === regStep ? ' active' : '');
+  }
+}
+function doRegister() {
+  const name = document.getElementById('r-name').value || 'New Student';
+  showToast('Account created! Welcome, ' + name + '! 🎉', 'success');
+  currentRole = 'student';
+  currentUser = { name, role: 'student' };
+  document.getElementById('s-uname').textContent = name;
+  document.getElementById('s-avatar').textContent = name.split(' ').map(n=>n[0]).join('').substring(0,2);
+  showScreen('screen-student');
+  renderStudentDashboard();
+}
+
+// ============ TAB SWITCHING ============
+function studentTab(tab, el) {
+  document.querySelectorAll('#screen-student .nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.querySelectorAll('#screen-student .tab-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('s-tab-' + tab).classList.add('active');
+  if (tab === 'myapps') renderStudentAppsTable(applications.filter(a => a.studentId === 'STU-001'));
+  if (tab === 'funding') renderStudentFunding();
+  if (tab === 'dashboard') renderStudentDashboard();
+}
+function adminTab(tab, el) {
+  document.querySelectorAll('#screen-admin .nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.querySelectorAll('#screen-admin .tab-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('a-tab-' + tab).classList.add('active');
+  if (tab === 'dashboard') renderAdminDashboard();
+  if (tab === 'applications') renderAdminTable();
+  if (tab === 'amounts') { renderAmountsTable(); populateAmountSelect(); updateAmountSummary(); }
+  if (tab === 'exports') updateExportCount();
+}
+
+// ============ STUDENT DASHBOARD ============
+function renderStudentDashboard() {
+  const myApps = applications.filter(a => a.studentId === 'STU-001');
+  document.getElementById('s-stat-total').textContent = myApps.length;
+  document.getElementById('s-stat-approved').textContent = myApps.filter(a=>a.status==='approved').length;
+  document.getElementById('s-stat-pending').textContent = myApps.filter(a=>a.status==='pending').length;
+  const total = myApps.reduce((s,a)=>s+a.amount,0);
+  document.getElementById('s-stat-amount').textContent = '$' + total.toLocaleString();
+  const tbody = document.getElementById('s-recent-apps');
+  tbody.innerHTML = myApps.slice(0,3).map(a => `
+    <tr><td><strong>${a.project}</strong></td><td>${a.category}</td><td>$${a.amount.toLocaleString()}</td>
+    <td>${badgeHtml(a.status)}</td><td>${a.date}</td></tr>`).join('');
+}
+function renderStudentAppsTable(apps) {
+  const tbody = document.getElementById('s-apps-table');
+  tbody.innerHTML = apps.map(a => `
+    <tr><td><strong>${a.project}</strong></td><td>${a.category}</td><td>$${a.amount.toLocaleString()}</td>
+    <td>${badgeHtml(a.status)}</td><td>${a.date}</td>
+    <td><button class="btn btn-secondary btn-sm" onclick="viewApp('${a.id}','student')">View</button></td></tr>`).join('');
+}
+function filterStudentApps(q) {
+  const my = applications.filter(a => a.studentId === 'STU-001');
+  renderStudentAppsTable(q ? my.filter(a => a.project.toLowerCase().includes(q.toLowerCase())) : my);
+}
+function renderStudentFunding() {
+  const my = applications.filter(a => a.studentId === 'STU-001');
+  const req = my.reduce((s,a)=>s+a.amount,0);
+  const app = my.filter(a=>a.status==='approved').reduce((s,a)=>s+a.approvedAmt,0);
+  const pend = my.filter(a=>a.status==='pending'||a.status==='review').reduce((s,a)=>s+a.amount,0);
+  document.getElementById('sf-req').textContent = '$'+req.toLocaleString();
+  document.getElementById('sf-app').textContent = '$'+app.toLocaleString();
+  document.getElementById('sf-pend').textContent = '$'+pend.toLocaleString();
+  document.getElementById('sf-table').innerHTML = my.map(a=>`
+    <tr><td><strong>${a.project}</strong></td><td>$${a.amount.toLocaleString()}</td>
+    <td>${badgeHtml(a.status)}</td><td style="color:var(--muted);font-size:.82rem">${a.note||'—'}</td></tr>`).join('');
+}
+
+// ============ SUBMIT APPLICATION ============
+function submitApplication() {
+  const title = document.getElementById('app-title').value.trim();
+  const amount = parseFloat(document.getElementById('app-amount').value);
+  const desc = document.getElementById('app-desc').value.trim();
+  if (!title || !amount || !desc) { showToast('Please fill in all required fields', 'error'); return; }
+  const newApp = {
+    id: 'APP-' + String(applications.length+1).padStart(3,'0'),
+    studentId: 'STU-001', studentName: currentUser.name, uni: 'Univ. of Rwanda',
+    project: title, category: document.getElementById('app-cat').value,
+    amount, approvedAmt: 0, status: 'pending',
+    date: new Date().toISOString().split('T')[0],
+    desc, team: document.getElementById('app-team').value,
+    outcomes: document.getElementById('app-outcomes').value,
+    timeline: document.getElementById('app-timeline').value, note: ''
+  };
+  applications.unshift(newApp);
+  showToast('Application submitted successfully! 🎉', 'success');
+  ['app-title','app-amount','app-desc','app-team','app-outcomes'].forEach(id => document.getElementById(id).value = '');
+  studentTab('myapps', null);
+  document.querySelectorAll('#screen-student .nav-item').forEach((n,i)=>n.classList.toggle('active', i===2));
+}
+
+// ============ ADMIN DASHBOARD ============
+function renderAdminDashboard() {
+  document.getElementById('a-stat-total').textContent = applications.length;
+  document.getElementById('a-stat-pending').textContent = applications.filter(a=>a.status==='pending').length;
+  document.getElementById('a-stat-approved').textContent = applications.filter(a=>a.status==='approved').length;
+  document.getElementById('a-stat-amount').textContent = '$'+applications.reduce((s,a)=>s+a.amount,0).toLocaleString();
+  document.getElementById('a-stat-approved-amt').textContent = '$'+applications.filter(a=>a.status==='approved').reduce((s,a)=>s+a.approvedAmt,0).toLocaleString();
+  document.getElementById('a-stat-students').textContent = [...new Set(applications.map(a=>a.studentId))].length;
+  const tbody = document.getElementById('a-recent-apps');
+  tbody.innerHTML = applications.slice(0,5).map(a=>`
+    <tr><td>${a.studentName}</td><td><strong>${a.project}</strong></td><td>$${a.amount.toLocaleString()}</td>
+    <td>${badgeHtml(a.status)}</td><td>${a.date}</td>
+    <td style="display:flex;gap:6px;flex-wrap:wrap">
+      ${a.status==='pending'||a.status==='review'?`<button class="btn btn-success btn-sm" onclick="updateStatus('${a.id}','approved')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="updateStatus('${a.id}','rejected')">✗ Reject</button>`:''}
+      <button class="btn btn-secondary btn-sm" onclick="viewApp('${a.id}','admin')">View</button>
+    </td></tr>`).join('');
+}
+
+function renderAdminTable() {
+  const q = (document.getElementById('a-search')||{}).value||'';
+  const sf = (document.getElementById('a-filter-status')||{}).value||'';
+  let apps = applications;
+  if (q) apps = apps.filter(a=>a.studentName.toLowerCase().includes(q.toLowerCase())||a.project.toLowerCase().includes(q.toLowerCase()));
+  if (sf) apps = apps.filter(a=>a.status===sf);
+  document.getElementById('a-apps-table').innerHTML = apps.map(a=>`
+    <tr><td>${a.studentName}<br><small style="color:var(--muted)">${a.uni}</small></td>
+    <td><strong>${a.project}</strong></td><td>${a.category}</td><td>$${a.amount.toLocaleString()}</td>
+    <td>${badgeHtml(a.status)}</td><td>${a.date}</td>
+    <td style="display:flex;gap:6px;flex-wrap:wrap">
+      ${a.status==='pending'?`<button class="btn btn-secondary btn-sm" onclick="updateStatus('${a.id}','review')">⟳ Review</button>`:''}
+      ${a.status==='pending'||a.status==='review'?`<button class="btn btn-success btn-sm" onclick="updateStatus('${a.id}','approved')">✓</button><button class="btn btn-danger btn-sm" onclick="updateStatus('${a.id}','rejected')">✗</button>`:''}
+      <button class="btn btn-secondary btn-sm" onclick="viewApp('${a.id}','admin')">📄</button>
+    </td></tr>`).join('');
+}
+
+function updateStatus(id, status) {
+  const app = applications.find(a=>a.id===id);
+  if (!app) return;
+  app.status = status;
+  showToast(`Application ${status}!`, 'success');
+  renderAdminDashboard(); renderAdminTable(); renderAmountsTable(); populateAmountSelect(); updateExportCount();
+}
+
+// ============ AMOUNTS ============
+function updateAmountSummary() {
+  const req = applications.reduce((s,a)=>s+a.amount,0);
+  const app = applications.filter(a=>a.approvedAmt>0).reduce((s,a)=>s+a.approvedAmt,0);
+  document.getElementById('am-req').textContent = '$'+req.toLocaleString();
+  document.getElementById('am-app').textContent = '$'+app.toLocaleString();
+  document.getElementById('am-avg').textContent = '$'+Math.round(req/applications.length).toLocaleString();
+}
+function populateAmountSelect() {
+  const sel = document.getElementById('am-select');
+  sel.innerHTML = '<option value="">-- Select --</option>' + applications.map(a=>`<option value="${a.id}">${a.project} (${a.studentName})</option>`).join('');
+}
+function loadAmountApp() {
+  const id = document.getElementById('am-select').value;
+  const app = applications.find(a=>a.id===id);
+  document.getElementById('am-req-disp').value = app ? '$'+app.amount.toLocaleString() : '';
+  document.getElementById('am-approve-input').value = app ? (app.approvedAmt||'') : '';
+  document.getElementById('am-note').value = app ? app.note : '';
+}
+function saveAmount() {
+  const id = document.getElementById('am-select').value;
+  if (!id) { showToast('Select an application first', 'error'); return; }
+  const app = applications.find(a=>a.id===id);
+  const val = parseFloat(document.getElementById('am-approve-input').value);
+  if (isNaN(val)) { showToast('Enter a valid amount', 'error'); return; }
+  app.approvedAmt = val;
+  app.note = document.getElementById('am-note').value;
+  showToast('Amount saved!', 'success');
+  renderAmountsTable(); updateAmountSummary();
+}
+function renderAmountsTable() {
+  updateAmountSummary();
+  document.getElementById('am-table').innerHTML = applications.map(a=>`
+    <tr><td>${a.studentName}</td><td><strong>${a.project}</strong></td>
+    <td>$${a.amount.toLocaleString()}</td>
+    <td style="color:var(--accent2)">${a.approvedAmt?'$'+a.approvedAmt.toLocaleString():'—'}</td>
+    <td>${badgeHtml(a.status)}</td>
+    <td style="color:var(--muted);font-size:.82rem">${a.note||'—'}</td></tr>`).join('');
+}
+
+// ============ CSV EXPORT ============
+function updateExportCount() {
+  if (!document.getElementById('ep-count')) return;
+  document.getElementById('ep-count').textContent = applications.length;
+}
+function exportCSV() {
+  const statusF = document.getElementById('exp-status').value;
+  let apps = statusF === 'all' ? applications : applications.filter(a=>a.status===statusF);
+  const headers = ['Application ID','Student Name','Student ID','University','Department','Project Title','Category','Amount Requested','Amount Approved','Status','Submission Date','Team Members','Timeline','Expected Outcomes','Admin Notes'];
+  const rows = apps.map(a=>[a.id,a.studentName,a.studentId,a.uni,'',a.project,a.category,a.amount,a.approvedAmt||0,a.status,a.date,a.team,a.timeline,a.outcomes,a.note]);
+  const csv = [headers, ...rows].map(r=>r.map(c=>'"'+(String(c||'').replace(/"/g,'""'))+'"').join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = 'edufund_applicants.csv'; link.click();
+  showToast('CSV downloaded!', 'success');
+}
+
+// ============ VIEW APP MODAL ============
+function viewApp(id, role) {
+  const a = applications.find(ap=>ap.id===id);
+  if (!a) return;
+  document.getElementById('modal-proj-title').textContent = a.project;
+  document.getElementById('modal-proj-sub').textContent = 'Submitted by ' + a.studentName + ' · ' + a.date;
+  document.getElementById('modal-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="stat-card"><div class="label">Category</div><div style="font-size:1rem;font-weight:600">${a.category}</div></div>
+      <div class="stat-card"><div class="label">Status</div>${badgeHtml(a.status)}</div>
+      <div class="stat-card"><div class="label">Requested</div><div style="font-size:1rem;font-weight:600;color:var(--accent)">$${a.amount.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="label">Approved</div><div style="font-size:1rem;font-weight:600;color:var(--accent2)">${a.approvedAmt?'$'+a.approvedAmt.toLocaleString():'Not yet approved'}</div></div>
+    </div>
+    <div class="form-group"><label>Description</label><div style="padding:12px;background:var(--bg);border-radius:8px;font-size:.88rem;line-height:1.6">${a.desc}</div></div>
+    <div class="form-group"><label>Team Members</label><div style="padding:12px;background:var(--bg);border-radius:8px;font-size:.88rem">${a.team||'—'}</div></div>
+    <div class="form-group"><label>Timeline</label><div style="padding:12px;background:var(--bg);border-radius:8px;font-size:.88rem">${a.timeline}</div></div>
+    <div class="form-group"><label>Expected Outcomes</label><div style="padding:12px;background:var(--bg);border-radius:8px;font-size:.88rem;line-height:1.6">${a.outcomes||'—'}</div></div>
+    ${a.note?`<div class="form-group"><label>Admin Note</label><div style="padding:12px;background:rgba(247,168,79,.08);border:1px solid rgba(247,168,79,.2);border-radius:8px;font-size:.88rem;line-height:1.6;color:var(--warn)">${a.note}</div></div>`:''}
+  `;
+  const actions = document.getElementById('modal-actions');
+  if (role === 'admin' && (a.status === 'pending' || a.status === 'review')) {
+    actions.innerHTML = `
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn btn-danger" onclick="updateStatus('${a.id}','rejected');closeModal()">✗ Reject</button>
+      <button class="btn btn-success" onclick="updateStatus('${a.id}','approved');closeModal()">✓ Approve</button>`;
+  } else {
+    actions.innerHTML = `<button class="btn btn-primary" onclick="closeModal()">Close</button>`;
+  }
+  document.getElementById('modal-app').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-app').classList.remove('open'); }
+document.getElementById('modal-app').addEventListener('click', e => { if (e.target.id==='modal-app') closeModal(); });
+
+// ============ CHATBOT ============
+const ANTHROPIC_KEY_NOTE = ''; // uses Anthropic API via fetch
+
+const botReplies = {
+  'how do i apply': "To apply for funding, go to the **New Application** tab in the sidebar. Fill in your project title, category, funding amount, description, team, and timeline. Submit when ready — our team reviews within 5–7 working days!",
+  'maximum funding': "The maximum funding per application is **$10,000**. Most approved projects receive between $2,000–$6,000. Projects with strong impact statements and clear timelines are prioritized.",
+  'review take': "The review process typically takes **5–7 working days** from submission. You'll receive a status update via your dashboard. If additional info is needed, an admin will leave a note on your application.",
+  'how many pending': `There are currently **${applications.filter(a=>a.status==='pending').length} pending applications** waiting for review.`,
+  'total funding': `The total funding requested across all applications is **$${applications.reduce((s,a)=>s+a.amount,0).toLocaleString()}**.`,
+  'export': "To export the applicant list as CSV, go to **Export CSV** in the admin sidebar. You can filter by status and date range before downloading.",
+  'status': "You can check your application status in the **My Applications** tab. Statuses: 🟡 Pending, 🔵 In Review, 🟢 Approved, 🔴 Rejected.",
+  'categories': "Available project categories are: Technology, Environment, Health, Education, Social Impact, and Arts. Choose the one that best fits your project.",
+  'team': "You can add team members in the 'Team Members' field when submitting your application. List names separated by commas.",
+  'default': "That's a great question! For specific help, you can browse the **My Applications** tab for your status, or contact our support team at support@edufund.rw. I'm here to help with any other questions! 😊"
+};
+
+function getBotReply(msg) {
+  const m = msg.toLowerCase();
+  for (const key in botReplies) {
+    if (key !== 'default' && m.includes(key)) return botReplies[key];
+  }
+  return botReplies['default'];
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendMsg('chat-messages', msg, 'user');
+  showTyping('chat-messages');
+  setTimeout(() => {
+    removeTyping('chat-messages');
+    appendMsg('chat-messages', getBotReply(msg), 'bot');
+  }, 900 + Math.random()*600);
+}
+function quickChat(msg) {
+  document.getElementById('chat-input').value = msg;
+  sendChat();
+}
+function sendAdminChat() {
+  const input = document.getElementById('admin-chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendMsg('admin-chat-messages', msg, 'user');
+  showTyping('admin-chat-messages');
+  setTimeout(() => {
+    removeTyping('admin-chat-messages');
+    appendMsg('admin-chat-messages', getBotReply(msg), 'bot');
+  }, 900 + Math.random()*600);
+}
+function quickAdminChat(msg) {
+  document.getElementById('admin-chat-input').value = msg;
+  sendAdminChat();
+}
+
+function appendMsg(containerId, text, role) {
+  const container = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  div.innerHTML = `<div class="msg-bubble">${text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div><div class="msg-time">${now}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+function showTyping(containerId) {
+  const container = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'msg bot'; div.id = containerId + '-typing';
+  div.innerHTML = '<div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+function removeTyping(containerId) {
+  const el = document.getElementById(containerId + '-typing');
+  if (el) el.remove();
+}
+
+// ============ HELPERS ============
+function badgeHtml(status) {
+  const map = { pending:'badge-pending', approved:'badge-approved', rejected:'badge-rejected', review:'badge-review' };
+  const icons = { pending:'⏳', approved:'✅', rejected:'❌', review:'🔍' };
+  return `<span class="badge ${map[status]||''}">${icons[status]||''}${status.charAt(0).toUpperCase()+status.slice(1)}</span>`;
+}
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3200);
+}
+
+// Init student table
+renderStudentAppsTable(applications.filter(a=>a.studentId==='STU-001'));
+</script>
+</body>
+</html>
